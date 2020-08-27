@@ -1,0 +1,15 @@
+Package: mdi
+Version: 0.0.0-9000
+Suggests:
+    tools,
+    utils
+Title: The Markdown Injector (MDI)
+Authors@R: c(person("Henrik", "Bengtsson", role=c("aut", "cre", "cph"),
+                                          email = "henrikb@braju.com"))
+Description: Tools for updated Markdown code blocks.
+License: LGPL (>= 2.1)
+LazyLoad: TRUE
+URL: https://github.com/HenrikBengtsson/mdi
+BugReports: https://github.com/HenrikBengtsson/mdi/issues
+RoxygenNote: 7.1.1
+Roxygen: list(markdown = TRUE)

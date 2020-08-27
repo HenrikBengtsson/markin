@@ -1,0 +1,139 @@
+#' The Markdown Injector (MDI)
+#'
+#' @param file The Markdown file
+#'
+#' @param verbose If TRUE, verbose messages are outputted, otherwise not.
+#'
+#' @return (invisible; character vector)
+#' The Markdown file content with updated lines.
+#'
+#' @importFrom tools file_path_sans_ext
+#' @importFrom utils file_test
+#' @export
+mdi_inject <- function(lines, barefile, path = ".", verbose = FALSE) {
+  stopifnot(is.character(lines), !anyNA(lines))
+  stopifnot(is.character(barefile), length(barefile) == 1L, !is.na(barefile))
+  path <- dirname(barefile)
+  stopifnot(file_test("-d", path))
+  default_chunk_file <- sprintf("%s.sh", barefile)
+  
+  pattern <- "(.*)<!--[[:space:]]+(code-block)([[:space:]](.*))?[[:space:]]+-->(.*)"
+  idxs <- grep(pattern, lines)
+  nlines <- length(lines)
+  
+  if (verbose) {
+    message("Bare file: ", barefile)
+    message("Default chunk file: ", default_chunk_file)
+    message("Number of lines: ", nlines)
+    message("Number of MDI declarations: ", length(idxs))
+  }
+
+  chunk_idx <- 1L
+  for (kk in seq_along(idxs)) {
+    idx <- idxs[kk]
+    line <- lines[idx]
+    prefix <- gsub(pattern, "\\1", line)
+    command <- gsub(pattern, "\\2", line)
+    args <- gsub(pattern, "\\4", line)
+    suffix <- gsub(pattern, "\\5", line)
+    if (verbose) {
+      message("Prefix: ", sQuote(prefix))
+      message("Command: ", sQuote(command))
+      message("Arguments: ", sQuote(args))
+      message("Suffix: ", sQuote(suffix))
+    }
+  
+    ## Parse arguments
+    if (nzchar(args)) {
+      ## - <filename>
+      ## - <filename>#<label>
+      ## - #<label>
+      pattern <- "^([^#]*)(|#([^#]+))$"
+      if (!grepl(pattern, args)) {
+        stop(sprintf("Syntax error: Unknown %s arguments: %s",
+             sQuote(command), sQuote(args)))
+      }
+      args <- list(
+        filename = gsub(pattern, "\\1", args),
+        label    = gsub(pattern, "\\3", args)
+      )
+      for (name in names(args)) {
+        if (!nzchar(args[[name]])) args[[name]] <- NULL
+      }
+    } else {
+      args <- NULL
+    }
+
+    ## Peform command
+    if (verbose) {
+      message("*** ", command)
+      for (name in names(args)) {
+        message(sprintf(" - %s: %s", name, sQuote(args[[name]])))
+      }
+    }
+    if (command == "code-block") {
+      ## Find Markdown code block
+      cidxs <- idx + grep("```", lines[-seq_len(idx)])[1:2]
+      stopifnot(!anyNA(cidxs))
+      ats <- cidxs[1]:cidxs[2]
+      block <- lines[ats]
+
+      if (is.null(args$filename)) {
+        chunk_file <- default_chunk_file
+      } else {
+        chunk_file <- file.path(path, args$filename)
+      }
+      
+      if (is.null(args$label)) {
+        chunk_label <- kk
+      } else {
+        chunk_label <- args$label
+      }
+      
+      file_to_inject <- sprintf("%s.%s.%s", chunk_file, command, chunk_label)
+      if (verbose) message("File to inject: ", sQuote(file_to_inject))
+      if (!file_test("-f", file_to_inject)) {
+        stop("No such file: ", sQuote(file_to_inject))
+      }
+      bfr <- readLines(file_to_inject, warn = FALSE)
+      bfr <- paste(bfr, collapse = "\n")
+      lines[ats[1]] <- sprintf("%s\n%s", lines[ats[1]], bfr)
+      if (length(ats) >= 3L) {
+        drop <- ats[2:(length(ats)-1L)]
+        lines[drop] <- NA_character_
+      }
+    }
+  }
+
+  if (verbose) message("Number of lines: ", length(lines))
+  stopifnot(length(lines) == nlines)
+  
+  lines <- lines[!is.na(lines)]
+  if (verbose) message("Number of lines: ", length(lines))
+
+  lines <- paste(c(lines, ""), collapse = "\n")
+  lines <- strsplit(lines, split = "\n", fixed = TRUE)
+  lines <- unlist(lines, use.names = FALSE)
+
+  if (verbose) message("Number of lines: ", length(lines))
+
+  lines
+}
+
+
+
+
+#' @importFrom utils file_test
+#' @export
+mdi <- function(file, verbose = FALSE) {
+  stopifnot(file_test("-f", file))
+  barefile <- tools::file_path_sans_ext(file)
+
+  if (verbose) {
+    message("File: ", file)
+    message("Bare file: ", barefile)
+  }
+
+  lines <- readLines(file, warn = FALSE)
+  mdi_inject(lines, barefile = barefile, verbose = verbose)
+}
