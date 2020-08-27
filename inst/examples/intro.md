@@ -14,3 +14,16 @@ What is special about the above code block, is that its content can be updated b
 $ mdi intro.md
 ```
 
+Here is another two code blocks:
+
+<!-- code-block #2 -->
+```sh
+$ msg="Hi there"
+```
+
+<!-- code-block #3 -->
+```sh
+$ echo "$msg"
+Hi there
+```
+

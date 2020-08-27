@@ -10,7 +10,30 @@
 #' @importFrom tools file_path_sans_ext
 #' @importFrom utils file_test
 #' @export
-mdi_inject <- function(lines, barefile, path = ".", verbose = FALSE) {
+mdi <- function(file, verbose = FALSE) {
+  stopifnot(file_test("-f", file))
+  barefile <- file_path_sans_ext(file)
+
+  if (verbose) {
+    message("File: ", file)
+    message("Bare file: ", barefile)
+  }
+
+  lines <- readLines(file, warn = FALSE)
+  mdi_inject(lines, barefile = barefile, verbose = verbose)
+}
+
+
+#' @param lines (character) The Markdown lines to be processed.
+#'
+#' @param barefile (character string) The bare file without the filename extension.
+#'
+#' @return (character) The updated Markdown lines.
+#'
+#' @rdname mdi
+#' @importFrom utils file_test
+#' @export
+mdi_inject <- function(lines, barefile, verbose = FALSE) {
   stopifnot(is.character(lines), !anyNA(lines))
   stopifnot(is.character(barefile), length(barefile) == 1L, !is.na(barefile))
   path <- dirname(barefile)
@@ -37,6 +60,7 @@ mdi_inject <- function(lines, barefile, path = ".", verbose = FALSE) {
     args <- gsub(pattern, "\\4", line)
     suffix <- gsub(pattern, "\\5", line)
     if (verbose) {
+      message("MDI declaration: ", sQuote(line))
       message("Prefix: ", sQuote(prefix))
       message("Command: ", sQuote(command))
       message("Arguments: ", sQuote(args))
@@ -48,14 +72,14 @@ mdi_inject <- function(lines, barefile, path = ".", verbose = FALSE) {
       ## - <filename>
       ## - <filename>#<label>
       ## - #<label>
-      pattern <- "^([^#]*)(|#([^#]+))$"
-      if (!grepl(pattern, args)) {
+      args_pattern <- "^([^#]*)(|#([^#]+))$"
+      if (!grepl(args_pattern, args)) {
         stop(sprintf("Syntax error: Unknown %s arguments: %s",
              sQuote(command), sQuote(args)))
       }
       args <- list(
-        filename = gsub(pattern, "\\1", args),
-        label    = gsub(pattern, "\\3", args)
+        filename = gsub(args_pattern, "\\1", args),
+        label    = gsub(args_pattern, "\\3", args)
       )
       for (name in names(args)) {
         if (!nzchar(args[[name]])) args[[name]] <- NULL
@@ -123,17 +147,3 @@ mdi_inject <- function(lines, barefile, path = ".", verbose = FALSE) {
 
 
 
-#' @importFrom utils file_test
-#' @export
-mdi <- function(file, verbose = FALSE) {
-  stopifnot(file_test("-f", file))
-  barefile <- tools::file_path_sans_ext(file)
-
-  if (verbose) {
-    message("File: ", file)
-    message("Bare file: ", barefile)
-  }
-
-  lines <- readLines(file, warn = FALSE)
-  mdi_inject(lines, barefile = barefile, verbose = verbose)
-}
