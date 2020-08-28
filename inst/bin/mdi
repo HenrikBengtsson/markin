@@ -75,7 +75,15 @@ help() {
 
 
 # -------------------------------------------------------------------------
-# MDI utility functions
+# Terminal functions
+# -------------------------------------------------------------------------
+drop_ansi_escapes() {
+    sed 's/\x1b\[[0-9;]*m//g'
+}
+
+
+# -------------------------------------------------------------------------
+# MDI functions
 # -------------------------------------------------------------------------
 mdi_prompt() {
     echo "[${MDI_USER}@${MDI_HOSTNAME} ${MDI_PWD}]$ "
@@ -98,7 +106,10 @@ mdi_code_block() {
     #    echo "MDI_CODE_BLOCK_COUNTER=$MDI_CODE_BLOCK_COUNTER"
     readarray lines
     #    echo "lines=$lines"
-    cat > "$code_block_file"
+
+    ## Write to a temporary file
+    tf="${code_block_file}.tmp"
+    cat > "$tf"
     for ii in "${!lines[@]}"; do 
         cmd="${lines[$ii]}"
         #        echo "cmd=$cmd"
@@ -106,9 +117,12 @@ mdi_code_block() {
             export NO_COLOR=true
             printf "%s%s" "$(mdi_prompt)" "${cmd}"
             eval "${cmd}"
-        } 2>&1 | sed 's/\x1b\[[0-9;]*m//g' >> "$code_block_file"
+        } 2>&1 | drop_ansi_escapes >> "$tf"
     done
 
+    ## Rename only when complete
+    mv "$tf" "${code_block_file}"
+    
     echo "Created: $code_block_file"
 }
 
