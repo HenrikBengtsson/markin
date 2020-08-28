@@ -97,14 +97,15 @@ mdi_code_block() {
 #    echo "code_block_file=$code_block_file"
     #    echo "MDI_CODE_BLOCK_COUNTER=$MDI_CODE_BLOCK_COUNTER"
     readarray lines
-#    echo "lines=$lines"
+    #    echo "lines=$lines"
     cat > "$code_block_file"
     for ii in "${!lines[@]}"; do 
         cmd="${lines[$ii]}"
         #        echo "cmd=$cmd"
         {
-            printf "%s%s" "$(mdi_prompt)" "${cmd}";
-            eval "${cmd}";
+            export NO_COLOR=true
+            printf "%s%s" "$(mdi_prompt)" "${cmd}"
+            eval "${cmd}"
         } 2>&1 | sed 's/\x1b\[[0-9;]*m//g' >> "$code_block_file"
     done
 
