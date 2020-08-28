@@ -1,0 +1,179 @@
+#! /usr/bin/env bash
+### The Markdown Injector (MDI)
+###
+### Usage:
+###  mdi <command> [flags] [options] <file>
+###
+### Commands:
+###  inject     Injects already compiled code blocks
+###
+### Options:
+###
+### Version: 0.0.0-9000
+### Copyright: Henrik Bengtsson (2020)
+### License: GPL (>= 3.0) [https://www.gnu.org/licenses/gpl.html]
+### Source: https://github.com/UCSF-TI/C4-sysadm/
+#call="$0 $*"
+
+# -------------------------------------------------------------------------
+# Output utility functions
+# -------------------------------------------------------------------------
+_tput() {
+    if [[ $theme == "none" ]]; then
+        return
+    fi
+    tput "$@" 2> /dev/null
+}
+
+mdebug() {
+    if ! $debug; then
+        return
+    fi
+    {
+        _tput setaf 8 ## gray
+        echo "DEBUG: $*"
+        _tput sgr0    ## reset
+    } 1>&2
+}
+
+error() {
+    {
+        _tput setaf 1 ## red
+        echo "ERROR: $*"
+        _tput sgr0    ## reset
+    } >&2
+    exit 1
+}
+
+_exit() {
+    local value
+
+    value=${1:-0}
+    [[ "$(LC_ALL=C type -t _cleanup)" = function ]] && _cleanup
+    mdebug "Exiting with exit code $value"
+    exit "$value"
+}
+
+assert_file() {
+    [[ -f "$1" ]] || error "No such file: $1"
+}
+
+
+# -------------------------------------------------------------------------
+# CLI utility functions
+# -------------------------------------------------------------------------
+version() {
+    grep -E "^###[ ]*Version:[ ]*" "$0" | sed 's/###[ ]*Version:[ ]*//g'
+}
+
+help() {
+    local res
+    res=$(grep "^###" "$0" | grep -vE '^(####|### whatis: )' | cut -b 5-)
+    printf "%s\\n" "${res[@]}"
+}
+
+
+# -------------------------------------------------------------------------
+# MDI utility functions
+# -------------------------------------------------------------------------
+MDI_USER=${MDI_USER:-$USER}
+MDI_HOSTNAME=${MDI_HOSTNAME:-$HOSTNAME}
+MDI_PWD=${MDI_PWD:-$PWD}
+
+MDI_SCRIPT_FILE=${MDI_SCRIPT_FILE-$0}
+
+MDI_CODE_BLOCK_COUNTER=0
+
+mdi_prompt() {
+    echo "[${MDI_USER}@${MDI_HOSTNAME} ${MDI_PWD}]$ "
+}
+
+mdi_code_block() {
+    local cmd lines code_block_file
+    
+    MDI_CODE_BLOCK_COUNTER=$((MDI_CODE_BLOCK_COUNTER+1))
+    code_block_file="${MDI_SCRIPT_FILE}.code-block.${MDI_CODE_BLOCK_COUNTER}"
+#    echo "MDI_SCRIPT_FILE=$MDI_SCRIPT_FILE"
+#    echo "code_block_file=$code_block_file"
+    #    echo "MDI_CODE_BLOCK_COUNTER=$MDI_CODE_BLOCK_COUNTER"
+    readarray lines
+#    echo "lines=$lines"
+    cat > "$code_block_file"
+    for ii in "${!lines[@]}"; do 
+        cmd="${lines[$ii]}"
+        #        echo "cmd=$cmd"
+        {
+            printf "%s%s" "$(mdi_prompt)" "${cmd}";
+            eval "${cmd}";
+        } >> "$code_block_file" 2>&1
+    done
+
+    echo "Created: $code_block_file"
+}
+
+
+# -------------------------------------------------------------------------
+# Main
+# -------------------------------------------------------------------------
+theme=
+action=
+debug=false
+file=
+
+MDI_USER=alice
+MDI_HOSTNAME=dev2
+MDI_PWD='~'
+
+# Parse command-line options
+while [[ $# -gt 0 ]]; do
+    ## Commands:
+    if [[ "$1" == "build" ]]; then
+        action="$1"
+    elif [[ "$1" == "inject" ]]; then
+        action="$1"
+        
+    ## Options (--flags):
+    elif [[ "$1" == "--help" ]]; then
+        action=help
+    elif [[ "$1" == "--version" ]]; then
+        action=version
+    elif [[ "$1" == "--debug" ]]; then
+        debug=true
+
+    ## Options (--key=value):
+    elif [[ "$1" =~ ^--.*=.*$ ]]; then
+        key=${1//--}
+        key=${key//=*}
+        value=${1//--[[:alpha:]]*=}
+        mdebug "Key-value option '$1' parsed to key='$key', value='$value'"
+        if [[ -z $value ]]; then
+            merror "Option '--$key' must not be empty"
+        fi
+    else
+        if [[ -z "$file" ]]; then
+            file="$1"
+        else
+            extras="$extras $1"
+        fi
+    fi
+    shift
+done
+
+## --help should always be available prior to any validation errors
+if [[ -z $action ]]; then
+    help
+    _exit 0
+elif [[ $action == "help" ]]; then
+    help
+    _exit 0
+fi
+
+if [[ $action == "build" ]]; then
+    assert_file "$file"
+    # shellcheck disable=SC1090
+    source "$file"
+elif [[ $action == "inject" ]]; then
+    assert_file "$file"
+    Rscript -e "writeLines(mdi::mdi('$file'))" > "$file.tmp"
+    mv "$file.tmp" "$file"
+fi
