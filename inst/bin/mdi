@@ -5,6 +5,7 @@
 ###  mdi <command> [flags] [options] <file>
 ###
 ### Commands:
+###  build      Generate code blocks
 ###  inject     Injects already compiled code blocks
 ###
 ### Options:
@@ -104,7 +105,7 @@ mdi_code_block() {
         {
             printf "%s%s" "$(mdi_prompt)" "${cmd}";
             eval "${cmd}";
-        } >> "$code_block_file" 2>&1
+        } 2>&1 | sed 's/\x1b\[[0-9;]*m//g' >> "$code_block_file"
     done
 
     echo "Created: $code_block_file"
