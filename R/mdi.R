@@ -143,7 +143,3 @@ mdi_inject <- function(lines, barefile, verbose = FALSE) {
 
   lines
 }
-
-
-
-

@@ -120,10 +120,6 @@ action=
 debug=false
 file=
 
-MDI_USER=alice
-MDI_HOSTNAME=dev2
-MDI_PWD='~'
-
 # Parse command-line options
 while [[ $# -gt 0 ]]; do
     ## Commands:
