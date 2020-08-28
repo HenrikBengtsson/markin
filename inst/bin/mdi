@@ -76,16 +76,15 @@ help() {
 # -------------------------------------------------------------------------
 # MDI utility functions
 # -------------------------------------------------------------------------
-MDI_USER=${MDI_USER:-$USER}
-MDI_HOSTNAME=${MDI_HOSTNAME:-$HOSTNAME}
-MDI_PWD=${MDI_PWD:-$PWD}
-
-MDI_SCRIPT_FILE=${MDI_SCRIPT_FILE-$0}
-
-MDI_CODE_BLOCK_COUNTER=0
-
 mdi_prompt() {
     echo "[${MDI_USER}@${MDI_HOSTNAME} ${MDI_PWD}]$ "
+}
+
+mdi_reset() {
+     MDI_USER=${MDI_USER:-$USER}
+     MDI_HOSTNAME=${MDI_HOSTNAME:-$HOSTNAME}
+     MDI_PWD=${MDI_PWD:-$PWD}
+     MDI_CODE_BLOCK_COUNTER=0
 }
 
 mdi_code_block() {
@@ -166,6 +165,9 @@ fi
 
 if [[ $action == "build" ]]; then
     assert_file "$file"
+    MDI_SCRIPT_FILE=$file
+    mdi_reset
+
     # shellcheck disable=SC1090
     source "$file"
 elif [[ $action == "inject" ]]; then
