@@ -38,7 +38,6 @@ mdi_inject <- function(lines, barefile, verbose = FALSE) {
   stopifnot(is.character(barefile), length(barefile) == 1L, !is.na(barefile))
   path <- dirname(barefile)
   stopifnot(file_test("-d", path))
-  default_chunk_file <- sprintf("%s.sh", barefile)
   
   pattern <- "(.*)<!--[[:space:]]+(code-block)([[:space:]](.*))?[[:space:]]+-->(.*)"
   idxs <- grep(pattern, lines)
@@ -46,7 +45,6 @@ mdi_inject <- function(lines, barefile, verbose = FALSE) {
   
   if (verbose) {
     message("Bare file: ", barefile)
-    message("Default chunk file: ", default_chunk_file)
     message("Number of lines: ", nlines)
     message("Number of MDI declarations: ", length(idxs))
   }
@@ -101,9 +99,11 @@ mdi_inject <- function(lines, barefile, verbose = FALSE) {
       stopifnot(!anyNA(cidxs))
       ats <- cidxs[1]:cidxs[2]
       block <- lines[ats]
-
+      
+      language <- gsub("^```([a-z]+)?", "\\1", block[1])
+      
       if (is.null(args$filename)) {
-        chunk_file <- default_chunk_file
+        chunk_file <- barefile
       } else {
         chunk_file <- file.path(path, args$filename)
       }
@@ -114,7 +114,7 @@ mdi_inject <- function(lines, barefile, verbose = FALSE) {
         chunk_label <- args$label
       }
       
-      file_to_inject <- sprintf("%s.%s.%s", chunk_file, command, chunk_label)
+      file_to_inject <- sprintf("%s.%s.%s.%s", chunk_file, language, command, chunk_label)
       if (verbose) message("File to inject: ", sQuote(file_to_inject))
       if (!file_test("-f", file_to_inject)) {
         stop("No such file: ", sQuote(file_to_inject))
