@@ -11,7 +11,7 @@ $ date --rfc-3339=seconds
 What is special about the above code block, is that its content can be updated by running the **mdi** tool, as in:
 
 ```sh
-$ mdi intro.md
+$ mdi inject intro.md
 ```
 
 Here is another two code blocks:
