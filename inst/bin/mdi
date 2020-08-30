@@ -102,7 +102,7 @@ mdi_hostname() {
 }
 
 mdi_prompt() {
-    echo "[$(mdi_user)@$(mdi_hostname) $(mdi_pwd)]$ "
+    echo "{$(mdi_user)@$(mdi_hostname) $(mdi_pwd)}\$ "
 }
 
 mdi_reset() {
