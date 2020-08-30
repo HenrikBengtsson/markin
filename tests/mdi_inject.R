@@ -3,7 +3,7 @@ message("*** mdi_inject")
 path <- system.file("examples", package = "mdi", mustWork = TRUE)
 
 file <- file.path(path, "intro.md")
-truth <- paste0(file, ".truth")
+truth <- file.path(path, "intro.updated.md")
 lines0 <- readLines(truth, warn = FALSE)
 
 lines <- readLines(file, warn = FALSE)
