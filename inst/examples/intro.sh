@@ -12,7 +12,7 @@ EOF
 
 mdi_code_block <<EOF
 pwd
-mkdir -p testing
+mkdir -p testing   ## '-p': no error if already exists
 cd testing
 pwd
 msg="Hello world!"
