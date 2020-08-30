@@ -4,7 +4,6 @@
 # shellcheck disable=SC2034
 MDI_USER=alice
 MDI_HOSTNAME=dev2
-MDI_PWD='~'
 
 mdi_code_block <<EOF
 msg="Hello world!"
