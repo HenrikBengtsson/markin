@@ -85,15 +85,31 @@ drop_ansi_escapes() {
 # -------------------------------------------------------------------------
 # MDI functions
 # -------------------------------------------------------------------------
+mdi_set_home() {
+    MDI_HOME=$1
+}
+
+mdi_pwd() {
+    echo "${PWD//${MDI_HOME}/\~}"
+}
+
+mdi_user() {
+    echo "${MDI_USER}"
+}
+
+mdi_hostname() {
+    echo "${MDI_HOSTNAME}"
+}
+
 mdi_prompt() {
-    echo "[${MDI_USER}@${MDI_HOSTNAME} ${MDI_PWD}]$ "
+    echo "[$(mdi_user)@$(mdi_hostname) $(mdi_pwd)]$ "
 }
 
 mdi_reset() {
-     MDI_USER=${MDI_USER:-$USER}
-     MDI_HOSTNAME=${MDI_HOSTNAME:-$HOSTNAME}
-     MDI_PWD=${MDI_PWD:-$PWD}
-     MDI_CODE_BLOCK_COUNTER=0
+    MDI_HOME=${MDI_HOME:-$PWD}
+    MDI_USER=${MDI_USER:-$USER}
+    MDI_HOSTNAME=${MDI_HOSTNAME:-$HOSTNAME}
+    MDI_CODE_BLOCK_COUNTER=0
 }
 
 mdi_code_block() {
