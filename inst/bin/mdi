@@ -111,6 +111,14 @@ mdi_cmd() {
     echo "${cmd}"
 }
 
+mdi_replace_pwd() {
+    sed "s/${MDI_HOME//\//\\/}/~/g" -
+}
+
+mdi_adjust_output() {
+    mdi_replace_pwd
+}
+
 mdi_reset() {
     MDI_HOME=${MDI_HOME:-$PWD}
     MDI_USER=${MDI_USER:-$USER}
@@ -141,7 +149,8 @@ mdi_code_block() {
         {
             export NO_COLOR=true
             printf "%s%s\\n" "$(mdi_prompt)" "$(mdi_cmd "$cmd")"
-            eval "${cmd}"
+            eval "${cmd}" &> "$tf2"
+            cat "$tf2" | mdi_adjust_output
         } 2>&1 >> "$tf"
         cat "$tf" | drop_ansi_escapes > "$tf2"
         mv "$tf2" "$tf"
