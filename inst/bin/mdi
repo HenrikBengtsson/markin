@@ -117,14 +117,17 @@ mdi_code_block() {
     
     MDI_CODE_BLOCK_COUNTER=$((MDI_CODE_BLOCK_COUNTER+1))
     code_block_file="${MDI_SCRIPT_FILE}.code-block.${MDI_CODE_BLOCK_COUNTER}"
+    
 #    echo "MDI_SCRIPT_FILE=$MDI_SCRIPT_FILE"
 #    echo "code_block_file=$code_block_file"
     #    echo "MDI_CODE_BLOCK_COUNTER=$MDI_CODE_BLOCK_COUNTER"
     readarray lines
     #    echo "lines=$lines"
 
+    opwd=$(pwd)
+
     ## Write to a temporary file
-    tf="${code_block_file}.tmp"
+    tf=$(readlink -f "${code_block_file}.tmp")
     tf2="${tf}.tmp"
     cat > "$tf"
     for ii in "${!lines[@]}"; do 
@@ -137,6 +140,8 @@ mdi_code_block() {
         cat "$tf" | drop_ansi_escapes > "$tf2"
         mv "$tf2" "$tf"
     done
+
+    cd "${opwd}"
 
     ## Rename only when complete
     mv "$tf" "${code_block_file}"

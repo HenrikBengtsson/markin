@@ -11,6 +11,10 @@ EOF
 
 
 mdi_code_block <<EOF
+pwd
+mkdir -p testing
+cd testing
+pwd
 msg="Hello world!"
 EOF
 
