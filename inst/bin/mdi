@@ -125,15 +125,17 @@ mdi_code_block() {
 
     ## Write to a temporary file
     tf="${code_block_file}.tmp"
+    tf2="${tf}.tmp"
     cat > "$tf"
     for ii in "${!lines[@]}"; do 
         cmd="${lines[$ii]}"
-        #        echo "cmd=$cmd"
         {
             export NO_COLOR=true
             printf "%s%s" "$(mdi_prompt)" "${cmd}"
             eval "${cmd}"
-        } 2>&1 | drop_ansi_escapes >> "$tf"
+        } 2>&1 >> "$tf"
+        cat "$tf" | drop_ansi_escapes > "$tf2"
+        mv "$tf2" "$tf"
     done
 
     ## Rename only when complete

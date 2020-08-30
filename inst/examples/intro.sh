@@ -6,7 +6,6 @@ MDI_USER=alice
 MDI_HOSTNAME=dev2
 
 mdi_code_block <<EOF
-msg="Hello world!"
 date --rfc-3339=seconds
 EOF
 
@@ -17,5 +16,5 @@ EOF
 
 
 mdi_code_block <<EOF
-echo "\$msg"
+echo "Message: '\$msg'"
 EOF
