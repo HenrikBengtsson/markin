@@ -8,6 +8,9 @@
 ###  build      Generate code blocks
 ###  inject     Injects already compiled code blocks
 ###
+### Flags:
+###  --skip     Skip evaluation of code block, if code-block file exists
+###
 ### Options:
 ###
 ### Version: 0.0.0-9000
@@ -131,6 +134,10 @@ mdi_code_block() {
     
     MDI_CODE_BLOCK_COUNTER=$((MDI_CODE_BLOCK_COUNTER+1))
     code_block_file="${MDI_SCRIPT_FILE}.code-block.${MDI_CODE_BLOCK_COUNTER}"
+
+    if $skip && [ -f "${code_block_file}" ]; then
+        echo "Already exist: $code_block_file"
+    fi
     
 #    echo "MDI_SCRIPT_FILE=$MDI_SCRIPT_FILE"
 #    echo "code_block_file=$code_block_file"
@@ -172,6 +179,7 @@ theme=
 action=
 debug=false
 file=
+skip=false
 
 # Parse command-line options
 while [[ $# -gt 0 ]]; do
@@ -188,6 +196,8 @@ while [[ $# -gt 0 ]]; do
         action=version
     elif [[ "$1" == "--debug" ]]; then
         debug=true
+    elif [[ "$1" == "--skip" ]]; then
+        skip=true
 
     ## Options (--key=value):
     elif [[ "$1" =~ ^--.*=.*$ ]]; then
