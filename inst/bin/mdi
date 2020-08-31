@@ -108,6 +108,13 @@ mdi_prompt() {
     echo "{$(mdi_user)@$(mdi_hostname) $(mdi_pwd)}\$ "
 }
 
+mdi_prompt() {
+    local tf
+    tf=$(mktemp)
+    PS4="$PS1" bash -c "set -x; true" 2> "$tf"
+    sed -E 's/true$//' "$tf"
+}
+
 mdi_cmd() {
     local cmd
     cmd=$*
@@ -143,11 +150,7 @@ mdi_code_block() {
         echo "Already exist: $code_block_file"
     fi
     
-#    echo "MDI_SCRIPT_FILE=$MDI_SCRIPT_FILE"
-#    echo "code_block_file=$code_block_file"
-    #    echo "MDI_CODE_BLOCK_COUNTER=$MDI_CODE_BLOCK_COUNTER"
     readarray lines
-    #    echo "lines=$lines"
 
     opwd=$(pwd)
 
