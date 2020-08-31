@@ -105,7 +105,12 @@ mdi_hostname() {
 }
 
 mdi_ps1() {
-    echo "${MDI_PS1:-$PS1}"
+    local prompt
+    prompt="${PS1}"
+    prompt=${prompt//\\u/$(mdi_user)}
+    prompt=${prompt//\\h/$(mdi_hostname)}
+    prompt=${prompt//\\w/$(mdi_pwd)}
+    echo "$prompt"
 }
 
 mdi_prompt() {
@@ -113,13 +118,9 @@ mdi_prompt() {
 }
 
 mdi_prompt() {
-    local tf prompt
+    local tf
     tf=$(mktemp)
-    prompt="$(mdi_ps1)"
-    prompt=${prompt//\\u/$(mdi_user)}
-    prompt=${prompt//\\h/$(mdi_hostname)}
-    prompt=${prompt//\\w/$(mdi_pwd)}
-    PS4="$prompt" bash --norc --noprofile -c "set -x; true" 2> "$tf"
+    PS4="$(mdi_ps1)" bash --norc --noprofile -c "set -x; true" 2> "$tf"
     sed -E 's/true$//' "$tf"
 }
 
