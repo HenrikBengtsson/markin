@@ -109,9 +109,13 @@ mdi_prompt() {
 }
 
 mdi_prompt() {
-    local tf
+    local tf prompt
     tf=$(mktemp)
-    PS4="$PS1" bash -c "set -x; true" 2> "$tf"
+    prompt="$MDI_PS1"
+    prompt=${prompt//\\u/$(mdi_user)}
+    prompt=${prompt//\\h/$(mdi_hostname)}
+    prompt=${prompt//\\w/$(mdi_pwd)}
+    PS4="$prompt" bash --norc --noprofile -c "set -x; true" 2> "$tf"
     sed -E 's/true$//' "$tf"
 }
 
@@ -137,6 +141,7 @@ mdi_reset() {
     MDI_HOME=${MDI_HOME:-$PWD}
     MDI_USER=${MDI_USER:-$USER}
     MDI_HOSTNAME=${MDI_HOSTNAME:-$HOSTNAME}
+    MDI_PS1=${MDI_PS1:-$PS1}
     MDI_CODE_BLOCK_COUNTER=0
 }
 
