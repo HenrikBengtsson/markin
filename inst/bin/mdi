@@ -104,6 +104,10 @@ mdi_hostname() {
     echo "${MDI_HOSTNAME}"
 }
 
+mdi_ps1() {
+    echo "${MDI_PS1:-$PS1}"
+}
+
 mdi_prompt() {
     echo "{$(mdi_user)@$(mdi_hostname) $(mdi_pwd)}\$ "
 }
@@ -111,7 +115,7 @@ mdi_prompt() {
 mdi_prompt() {
     local tf prompt
     tf=$(mktemp)
-    prompt="$MDI_PS1"
+    prompt="$(mdi_ps1)"
     prompt=${prompt//\\u/$(mdi_user)}
     prompt=${prompt//\\h/$(mdi_hostname)}
     prompt=${prompt//\\w/$(mdi_pwd)}
@@ -141,7 +145,6 @@ mdi_reset() {
     MDI_HOME=${MDI_HOME:-$PWD}
     MDI_USER=${MDI_USER:-$USER}
     MDI_HOSTNAME=${MDI_HOSTNAME:-$HOSTNAME}
-    MDI_PS1=${MDI_PS1:-$PS1}
     MDI_CODE_BLOCK_COUNTER=0
 }
 
