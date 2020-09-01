@@ -201,9 +201,10 @@ mdi_code_block() {
     MDI_CODE_BLOCK_COUNTER=$((MDI_CODE_BLOCK_COUNTER+1))
     mdebug "- MDI_CODE_BLOCK_COUNTER: ${MDI_CODE_BLOCK_COUNTER}"
     
-    suffix="${MDI_CODE_BLOCK_COUNTER}"
     if [[ -n "${label}" ]]; then
-        suffix="${suffix}.label=${label}"
+        suffix="label=${label}"
+    else
+        suffix="${MDI_CODE_BLOCK_COUNTER}"
     fi
     code_block_file="${MDI_SCRIPT_FILE}.code-block.${suffix}"
     mdebug "- code_block_file: ${code_block_file}"
