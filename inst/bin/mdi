@@ -214,6 +214,12 @@ mdi_code_block() {
         return
     fi
 
+    mdebug "- MDI_HOME: '${MDI_HOME}'"
+    mdebug "- MDI_USER: '${MDI_USER}'"
+    mdebug "- mdi_user(): '$(mdi_user)'"
+    mdebug "- MDI_HOSTNAME: '${MDI_HOSTNAME}'"
+    mdebug "- mdi_hostname(): '$(mdi_hostname)'"
+    mdebug "- mdi_pwd(): '$(mdi_pwd)'"
     mdebug "- PS1: '${PS1}'"
     mdebug "- mdi_ps1(): '$(mdi_ps1)'"
     mdebug "- mdi_prompt(): '$(mdi_prompt)'"
