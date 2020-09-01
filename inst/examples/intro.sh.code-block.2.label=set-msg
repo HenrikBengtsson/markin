@@ -1,7 +1,7 @@
-pwd
+{alice@dev2 ~}$ pwd
 ~
-mkdir -p testing   ## '-p': no error if already exists
-cd testing
-pwd
+{alice@dev2 ~}$ mkdir -p testing   ## '-p': no error if already exists
+{alice@dev2 ~}$ cd testing
+{alice@dev2 ~/testing}$ pwd
 ~/testing
-msg="Hello world!"
+{alice@dev2 ~/testing}$ msg="Hello world!"
