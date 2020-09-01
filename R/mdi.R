@@ -33,7 +33,7 @@ mdi <- function(file, verbose = FALSE) {
 #' @rdname mdi
 #' @importFrom utils file_test
 #' @export
-mdi_inject <- function(lines, barefile, verbose = TRUE) {
+mdi_inject <- function(lines, barefile, verbose = FALSE) {
   stopifnot(is.character(lines), !anyNA(lines))
   stopifnot(is.character(barefile), length(barefile) == 1L, !is.na(barefile))
   path <- dirname(barefile)
@@ -115,15 +115,19 @@ mdi_inject <- function(lines, barefile, verbose = TRUE) {
       }
 
       file_to_inject_prefix <- sprintf("%s.%s.%s", basename(chunk_file), language, command)
-      pattern <- sprintf("^%s.[0-9]+(|.label=[[:alphanum:]_-]+)$", file_to_inject_prefix)
-      if (verbose) {
-        message(utils::capture.output(utils::str(list(path = path, pattern = pattern))))
+      if (grepl("^[0-9]+$", chunk_label)) {
+        fmtstr <- "^%s.%s(|.label=[[:alnum:]_-]+)$"
+      } else {
+        fmtstr <- "^%s.[0-9]+(|.label=%s)$"
       }
-      files <- dir(path = path, pattern = pattern)
-      if (verbose) {
-        message(utils::capture.output(print(files)))
+      file_pattern <- sprintf(fmtstr, file_to_inject_prefix, chunk_label)
+      file_to_inject <- dir(path = path, pattern = file_pattern)
+      if (length(file_to_inject) == 0L) {
+        stop(sprintf("No such %s file with label %s (path: %s, pattern: %s)", sQuote(command), sQuote(chunk_label), sQuote(path), sQuote(file_pattern)))
+      } else if (length(file_to_inject) > 1L) {
+        stop(sprintf("More than %s file with label %s (path: %s, pattern: %s): [n=%d] %s", sQuote(command), sQuote(chunk_label), sQuote(path), sQuote(file_pattern), length(file_to_inject), paste(sQuote(file_to_inject), collapse = ", ")))
       }
-      file_to_inject <- sprintf("%s.%s", file_to_inject_prefix, chunk_label)
+      file_to_inject <- file.path(path, file_to_inject)
       if (verbose) message("File to inject: ", sQuote(file_to_inject))
       if (!file_test("-f", file_to_inject)) {
         stop("No such file: ", sQuote(file_to_inject))

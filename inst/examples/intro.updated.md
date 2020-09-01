@@ -5,7 +5,7 @@ The following code block illustrates how to use `date` in the shell and what it'
 <!-- code-block #1 -->
 ```sh
 {alice@dev2 ~}$ date --rfc-3339=seconds
-2020-08-30 14:35:08-07:00
+2020-09-01 10:28:24-07:00
 ```
 
 What is special about the above code block, is that its content can be updated by running the **mdi** tool, as in:
