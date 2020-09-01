@@ -70,7 +70,7 @@ mdi_inject <- function(lines, barefile, verbose = FALSE) {
       ## - <filename>
       ## - <filename>#<label>
       ## - #<label>
-      args_pattern <- "^([^#]*)(|#([^#]+))$"
+      args_pattern <- "^([^#]*)(|#([^#]+)| label=([[:alnum:]_-]+))$"
       if (!grepl(args_pattern, args)) {
         stop(sprintf("Syntax error: Unknown %s arguments: %s",
              sQuote(command), sQuote(args)))
@@ -118,7 +118,7 @@ mdi_inject <- function(lines, barefile, verbose = FALSE) {
       if (grepl("^[0-9]+$", chunk_label)) {
         fmtstr <- "^%s.%s(|.label=[[:alnum:]_-]+)$"
       } else {
-        fmtstr <- "^%s.[0-9]+(|.label=%s)$"
+        fmtstr <- "^%s.[0-9]+.label=%s$"
       }
       file_pattern <- sprintf(fmtstr, file_to_inject_prefix, chunk_label)
       file_to_inject <- dir(path = path, pattern = file_pattern)
