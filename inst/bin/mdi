@@ -150,10 +150,36 @@ mdi_reset() {
 }
 
 mdi_code_block() {
-    local cmd lines code_block_file
+    local cmd lines code_block_file suffix
+    local label
+
+    while [[ $# -gt 0 ]]; do
+        ## Options (--key=value):
+        if [[ "$1" =~ ^--.*=.*$ ]]; then
+            key=${1//--}
+            key=${key//=*}
+            value=${1//--[[:alnum:]_-]*=}
+            mdebug "Key-value option '$1' parsed to key='$key', value='$value'"
+            if [[ -z $value ]]; then
+                merror "Option '--$key' must not be empty"
+            fi
+            if [[ "$key" == "label" ]]; then
+                label="$value"
+            else
+                error "Unknown mdi_code_block() options: $1"
+            fi
+        else
+            error "Unknown mdi_code_block() options: $1"
+        fi
+        shift
+    done
     
     MDI_CODE_BLOCK_COUNTER=$((MDI_CODE_BLOCK_COUNTER+1))
-    code_block_file="${MDI_SCRIPT_FILE}.code-block.${MDI_CODE_BLOCK_COUNTER}"
+    suffix="${MDI_CODE_BLOCK_COUNTER}"
+    if [[ -n "${label}" ]]; then
+        suffix="${suffix}.label=${label}"
+    fi
+    code_block_file="${MDI_SCRIPT_FILE}.code-block.${suffix}"
 
     if $skip && [ -f "${code_block_file}" ]; then
         echo "Already exist: $code_block_file"
@@ -219,7 +245,7 @@ while [[ $# -gt 0 ]]; do
     elif [[ "$1" =~ ^--.*=.*$ ]]; then
         key=${1//--}
         key=${key//=*}
-        value=${1//--[[:alpha:]]*=}
+        value=${1//--[[:alnum:]_-]*=}
         mdebug "Key-value option '$1' parsed to key='$key', value='$value'"
         if [[ -z $value ]]; then
             merror "Option '--$key' must not be empty"

@@ -4,7 +4,7 @@
 # shellcheck disable=SC2034
 MDI_USER=alice
 MDI_HOSTNAME=dev2
-PS1="{\u@\h \w}\$ "
+MDI_PS1="{\u@\h \w}\$ "
 
 mdi_code_block <<EOF
 date --rfc-3339=seconds

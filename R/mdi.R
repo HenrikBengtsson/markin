@@ -33,7 +33,7 @@ mdi <- function(file, verbose = FALSE) {
 #' @rdname mdi
 #' @importFrom utils file_test
 #' @export
-mdi_inject <- function(lines, barefile, verbose = FALSE) {
+mdi_inject <- function(lines, barefile, verbose = TRUE) {
   stopifnot(is.character(lines), !anyNA(lines))
   stopifnot(is.character(barefile), length(barefile) == 1L, !is.na(barefile))
   path <- dirname(barefile)
@@ -113,8 +113,17 @@ mdi_inject <- function(lines, barefile, verbose = FALSE) {
       } else {
         chunk_label <- args$label
       }
-      
-      file_to_inject <- sprintf("%s.%s.%s.%s", chunk_file, language, command, chunk_label)
+
+      file_to_inject_prefix <- sprintf("%s.%s.%s", basename(chunk_file), language, command)
+      pattern <- sprintf("^%s.[0-9]+(|.label=[[:alphanum:]_-]+)$", file_to_inject_prefix)
+      if (verbose) {
+        message(utils::capture.output(utils::str(list(path = path, pattern = pattern))))
+      }
+      files <- dir(path = path, pattern = pattern)
+      if (verbose) {
+        message(utils::capture.output(print(files)))
+      }
+      file_to_inject <- sprintf("%s.%s", file_to_inject_prefix, chunk_label)
       if (verbose) message("File to inject: ", sQuote(file_to_inject))
       if (!file_test("-f", file_to_inject)) {
         stop("No such file: ", sQuote(file_to_inject))
