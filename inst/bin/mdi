@@ -164,6 +164,7 @@ mdi_adjust_output() {
 }
 
 mdi_reset() {
+    PS1=${PS1:-$MDI_PS1}
     MDI_HOME=${MDI_HOME:-$PWD}
     MDI_USER=${MDI_USER:-$USER}
     MDI_HOSTNAME=${MDI_HOSTNAME:-$HOSTNAME}
@@ -282,6 +283,8 @@ while [[ $# -gt 0 ]]; do
         action="$1"
     elif [[ "$1" == "inject" ]]; then
         action="$1"
+    elif [[ "$1" == "call" ]]; then
+        action="$1"
         
     ## Options (--flags):
     elif [[ "$1" == "--help" ]]; then
@@ -303,7 +306,7 @@ while [[ $# -gt 0 ]]; do
             merror "Option '--$key' must not be empty"
         fi
     else
-        if [[ -z "$file" ]]; then
+        if [[ -z "$file" && "$action" != "call" ]]; then
             file="$1"
         else
             extras="$extras $1"
@@ -332,4 +335,8 @@ elif [[ $action == "inject" ]]; then
     assert_file "$file"
     Rscript -e "writeLines(mdi::mdi('${file}', verbose='${debug}'))" > "$file.tmp"
     mv "$file.tmp" "$file"
+elif [[ $action == "call" ]]; then
+    mdebug "Calling: '$extras'"
+    mdi_reset
+    eval "$extras"
 fi
