@@ -71,10 +71,12 @@ mdi_inject <- function(lines, barefile, verbose = FALSE) {
       ## - <filename> label=<label>
       ## - label=<label>
       args <- unlist(strsplit(args, split = "[ ]+", fixed = FALSE))
-      args_pattern <- "^([^=]*)=(.*)$"
+      args_pattern <- "^([^=]*)=([\"']?[[:alnum:]_-]*[\"']?)$"
       idxs <- grep(args_pattern, args)
       keys <- gsub(args_pattern, "\\1", args[idxs])
       values <- gsub(args_pattern, "\\2", args[idxs])
+      values <- gsub("^'(.*)'$", "\\1", values)
+      values <- gsub('^"(.*)"$', "\\1", values)
       args[idxs] <- values
       names(args)[idxs] <- keys
       args <- as.list(args)

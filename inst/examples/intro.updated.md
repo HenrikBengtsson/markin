@@ -16,7 +16,7 @@ $ mdi inject intro.md
 
 Here is another two code blocks:
 
-<!-- code-block label=set-msg -->
+<!-- code-block label="set-msg" -->
 ```sh
 {alice@dev2 ~}$ pwd
 ~
