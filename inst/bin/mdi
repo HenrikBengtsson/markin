@@ -123,14 +123,28 @@ mdi_hostname() {
 }
 
 mdi_ps1() {
-    local prompt
+    local prompt t
     if [[ -z "$PS1" ]]; then
         warn "PS1 is empty"
     fi
     prompt="${PS1}"
+    
+    ## \u : the username of the current user
     prompt=${prompt//\\u/$(mdi_user)}
-    prompt=${prompt//\\h/$(mdi_hostname)}
-    prompt=${prompt//\\w/$(mdi_pwd)}
+    
+    ## \H : the hostname
+    t=$(mdi_hostname)
+    prompt=${prompt//\\h/$t}
+    ## \h : the hostname up to the first ‘.’
+    prompt=${prompt//\\h/${t%%.*}}
+             
+    ## \w : the current working directory, with $HOME abbreviated with a tilde
+    t=$(mdi_pwd)
+    prompt=${prompt//\\w/$t}
+    ## \W : the basename of the current working directory, with $HOME
+    ##      abbreviated with a tilde
+    prompt=${prompt//\\W/$(basename "$t")}
+    
     echo "$prompt"
 }
 
