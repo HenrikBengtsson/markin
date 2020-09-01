@@ -111,7 +111,9 @@ mdi_set_home() {
 }
 
 mdi_pwd() {
-    echo "${PWD//${MDI_HOME}/"~"}"
+    local tilde
+    tilde='~'
+    echo "${PWD//${MDI_HOME}/${tilde}}"
 }
 
 mdi_user() {
