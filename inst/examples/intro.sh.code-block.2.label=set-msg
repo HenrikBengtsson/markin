@@ -1,0 +1,7 @@
+pwd
+~
+mkdir -p testing   ## '-p': no error if already exists
+cd testing
+pwd
+~/testing
+msg="Hello world!"

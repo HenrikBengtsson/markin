@@ -11,7 +11,7 @@ date --rfc-3339=seconds
 EOF
 
 
-mdi_code_block <<EOF
+mdi_code_block --label=set-msg <<EOF
 pwd
 mkdir -p testing   ## '-p': no error if already exists
 cd testing
