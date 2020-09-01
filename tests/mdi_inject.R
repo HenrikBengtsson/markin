@@ -6,8 +6,6 @@ file <- file.path(path, "intro.md")
 truth <- file.path(path, "intro.updated.md")
 lines0 <- readLines(truth, warn = FALSE)
 
-lines <- readLines(file, warn = FALSE)
-
 file <- file.path(path, "intro.md")
 lines <- readLines(file, warn = FALSE)
 cat(lines, sep = "\n")
