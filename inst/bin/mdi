@@ -49,6 +49,24 @@ error() {
     exit 1
 }
 
+warn() {
+    {
+        _tput setaf 3 ## yellow
+        echo "WARNING: $*"
+        _tput sgr0    ## reset
+    } >&2
+    exit 1
+}
+
+ok() {
+    {
+        _tput setaf 2 ## green
+        echo "OK: $*"
+        _tput sgr0    ## reset
+    } >&2
+    exit 1
+}
+
 _exit() {
     local value
 
@@ -106,6 +124,9 @@ mdi_hostname() {
 
 mdi_ps1() {
     local prompt
+    if [[ -z "$PS1" ]]; then
+        warn "PS1 is empty"
+    fi
     prompt="${PS1}"
     prompt=${prompt//\\u/$(mdi_user)}
     prompt=${prompt//\\h/$(mdi_hostname)}
@@ -191,7 +212,11 @@ mdi_code_block() {
         echo "Already exist: $code_block_file"
         return
     fi
-    
+
+    mdebug "- PS1: '${PS1}'"
+    mdebug "- mdi_ps1(): '$(mdi_ps1)'"
+    mdebug "- mdi_prompt(): '$(mdi_prompt)'"
+
     readarray lines
     mdebug "- Number of lines: ${#lines[@]}"
 
@@ -219,16 +244,18 @@ mdi_code_block() {
     ## Rename only when complete
     mv "$tf" "${code_block_file}"
     
-    echo "Created: $code_block_file"
-    
-    readarray lines < "$code_block_file"
-    mdebug "- Number of output lines: ${#lines[@]}"
-    for ii in "${!lines[@]}"; do 
-        line="${lines[$ii]}"
-        mdebug "  '${line//[$'\r\n']}'"
-    done
+    if $debug; then
+        readarray lines < "$code_block_file"
+        mdebug "- Number of output lines: ${#lines[@]}"
+        for ii in "${!lines[@]}"; do 
+            line="${lines[$ii]}"
+            mdebug "  '${line//[$'\r\n']}'"
+        done
+    fi
     
     mdebug "mdi_code_block() ... done"
+    
+    echo "Created: $code_block_file"
 }
 
 
