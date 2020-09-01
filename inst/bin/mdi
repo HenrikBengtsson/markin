@@ -234,13 +234,13 @@ mdi_code_block() {
             export NO_COLOR=true
             mdi_call "$cmd"
             eval "${cmd}" &> "$tf2"
-            cat "$tf2" | mdi_adjust_output
-        } 2>&1 >> "$tf"
-        cat "$tf" | drop_ansi_escapes > "$tf2"
+            mdi_adjust_output < "$tf2"
+        } >> "$tf" 2>&1
+        drop_ansi_escapes < "$tf" > "$tf2"
         mv "$tf2" "$tf"
     done
 
-    cd "${opwd}"
+    cd "${opwd}" || error "Failed to change working directory: '${opwd}'"
 
     ## Rename only when complete
     mv "$tf" "${code_block_file}"
