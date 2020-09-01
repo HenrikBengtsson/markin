@@ -10,7 +10,7 @@ file <- file.path(path, "intro.md")
 lines <- readLines(file, warn = FALSE)
 cat(lines, sep = "\n")
 
-lines2 <- mdi::mdi_inject(lines, barefile = file.path(path, "intro"))
+lines2 <- mdi::mdi_inject(lines, barefile = file.path(path, "intro"), verbose = TRUE)
 cat(lines2, sep = "\n")
 
 stopifnot(all.equal(lines2, lines0))

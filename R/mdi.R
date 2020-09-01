@@ -40,18 +40,18 @@ mdi_inject <- function(lines, barefile, verbose = FALSE) {
   stopifnot(file_test("-d", path))
   
   pattern <- "(.*)<!--[[:space:]]+(code-block)([[:space:]](.*))?[[:space:]]+-->(.*)"
-  idxs <- grep(pattern, lines)
+  mdi_idxs <- grep(pattern, lines)
   nlines <- length(lines)
   
   if (verbose) {
     message("Bare file: ", barefile)
     message("Number of lines: ", nlines)
-    message("Number of MDI declarations: ", length(idxs))
+    message("Number of MDI declarations: ", length(mdi_idxs))
   }
 
   chunk_idx <- 1L
-  for (kk in seq_along(idxs)) {
-    idx <- idxs[kk]
+  for (kk in seq_along(mdi_idxs)) {
+    idx <- mdi_idxs[kk]
     line <- lines[idx]
     prefix <- gsub(pattern, "\\1", line)
     command <- gsub(pattern, "\\2", line)
@@ -68,20 +68,42 @@ mdi_inject <- function(lines, barefile, verbose = FALSE) {
     ## Parse arguments
     if (nzchar(args)) {
       ## - <filename>
+      ## - <filename> label=<label>
+      ## - label=<label>
+      args <- unlist(strsplit(args, split = "[ ]+", fixed = FALSE))
+      args_pattern <- "^([^=]*)=(.*)$"
+      idxs <- grep(args_pattern, args)
+      keys <- gsub(args_pattern, "\\1", args[idxs])
+      values <- gsub(args_pattern, "\\2", args[idxs])
+      args[idxs] <- values
+      names(args)[idxs] <- keys
+      args <- as.list(args)
+      
       ## - <filename>#<label>
       ## - #<label>
-      args_pattern <- "^([^#]*)(|#([^#]+)| label=([[:alnum:]_-]+))$"
-      if (!grepl(args_pattern, args)) {
-        stop(sprintf("Syntax error: Unknown %s arguments: %s",
-             sQuote(command), sQuote(args)))
+      idxs <- grep("#", unlist(args))
+      t <- strsplit(unlist(args)[idxs], split = "#", fixed = TRUE)
+      t <- lapply(t, FUN = function(x) {
+        names(x)[1] <- "filename"
+        names(x)[2] <- "label"
+        x[nzchar(x)]
+      })
+      args[idxs] <- t
+      names(args)[idxs] <- ""
+      idxs <- is.na(names(args))
+      names(args)[idxs] <- "filename"
+      args <- unlist(args)
+
+      names <- names(args)
+      counts <- table(names)
+      idxs <- which(counts > 1L)
+      if (length(idxs) > 0L) {
+        bad <- names[idxs]
+        details <- utils::capture.output(utils::str(args))
+        stop(sprintf("Syntax error: Duplicated field specifications in %s: %s (%s)",
+             sQuote(command), paste(sQuote(bad), collapse = ", "), details))
       }
-      args <- list(
-        filename = gsub(args_pattern, "\\1", args),
-        label    = gsub(args_pattern, "\\3", args)
-      )
-      for (name in names(args)) {
-        if (!nzchar(args[[name]])) args[[name]] <- NULL
-      }
+      args <- as.list(args)
     } else {
       args <- NULL
     }
@@ -116,7 +138,7 @@ mdi_inject <- function(lines, barefile, verbose = FALSE) {
 
       file_to_inject_prefix <- sprintf("%s.%s.%s", basename(chunk_file), language, command)
       if (grepl("^[0-9]+$", chunk_label)) {
-        fmtstr <- "^%s.%s(|.label=[[:alnum:]_-]+)$"
+        fmtstr <- "^%s.%s$"
       } else {
         fmtstr <- "^%s.label=%s$"
       }
