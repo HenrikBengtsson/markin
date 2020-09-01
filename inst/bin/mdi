@@ -153,6 +153,9 @@ mdi_code_block() {
     local cmd lines code_block_file suffix
     local label
 
+    mdebug "mdi_code_block() ..."
+    mdebug "- Arguments: '$*'"
+    
     while [[ $# -gt 0 ]]; do
         ## Options (--key=value):
         if [[ "$1" =~ ^--.*=.*$ ]]; then
@@ -175,17 +178,22 @@ mdi_code_block() {
     done
     
     MDI_CODE_BLOCK_COUNTER=$((MDI_CODE_BLOCK_COUNTER+1))
+    mdebug "- MDI_CODE_BLOCK_COUNTER: ${MDI_CODE_BLOCK_COUNTER}"
+    
     suffix="${MDI_CODE_BLOCK_COUNTER}"
     if [[ -n "${label}" ]]; then
         suffix="${suffix}.label=${label}"
     fi
     code_block_file="${MDI_SCRIPT_FILE}.code-block.${suffix}"
+    mdebug "- code_block_file: ${code_block_file}"
 
     if $skip && [ -f "${code_block_file}" ]; then
         echo "Already exist: $code_block_file"
+        return
     fi
     
     readarray lines
+    mdebug "- Number of lines: ${#lines[@]}"
 
     opwd=$(pwd)
 
@@ -195,6 +203,7 @@ mdi_code_block() {
     cat > "$tf"
     for ii in "${!lines[@]}"; do 
         cmd="${lines[$ii]}"
+        mdebug "- Line #$(( ii+1 )): '${cmd//[$'\r\n']}'"
         {
             export NO_COLOR=true
             mdi_call "$cmd"
@@ -211,6 +220,15 @@ mdi_code_block() {
     mv "$tf" "${code_block_file}"
     
     echo "Created: $code_block_file"
+    
+    readarray lines < "$code_block_file"
+    mdebug "- Number of output lines: ${#lines[@]}"
+    for ii in "${!lines[@]}"; do 
+        line="${lines[$ii]}"
+        mdebug "  '${line//[$'\r\n']}'"
+    done
+    
+    mdebug "mdi_code_block() ... done"
 }
 
 
