@@ -278,6 +278,6 @@ if [[ $action == "build" ]]; then
     source "$file"
 elif [[ $action == "inject" ]]; then
     assert_file "$file"
-    Rscript -e "writeLines(mdi::mdi('$file'))" > "$file.tmp"
+    Rscript -e "writeLines(mdi::mdi('${file}', verbose='${debug}'))" > "$file.tmp"
     mv "$file.tmp" "$file"
 fi
