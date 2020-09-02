@@ -189,7 +189,8 @@ mdi_reset() {
 
 mdi_code_block() {
     local cmd lines code_block_file suffix
-    local label ENTER
+    local label workdir
+    local ENTER
 
     mdebug "mdi_code_block() ..."
     mdebug "- Arguments: '$*'"
@@ -206,6 +207,8 @@ mdi_code_block() {
             fi
             if [[ "$key" == "label" ]]; then
                 label="$value"
+            elif [[ "$key" == "workdir" ]]; then
+                workdir="$value"
             else
                 error "Unknown mdi_code_block() options: $1"
             fi
@@ -240,12 +243,17 @@ mdi_code_block() {
     mdebug "- PS1: '${PS1}'"
     mdebug "- mdi_ps1(): '$(mdi_ps1)'"
     mdebug "- mdi_prompt(): '$(mdi_prompt)'"
+    mdebug "- workdir: '${workdir}'"
 
     readarray lines
     mdebug "- Number of lines: ${#lines[@]}"
 
     opwd=$(pwd)
 
+    if [[ -n "${workdir}" ]]; then
+        cd "${workdir}" || error "Failed to change working directory: '${workdir}'"
+    fi
+    
     ## Write to a temporary file
     tf=$(readlink -f "${code_block_file}.tmp")
     tf2="${tf}.tmp"
