@@ -27,3 +27,20 @@ $ echo "$msg"
 Hi there
 ```
 
+<!-- code-block label="stdin" -->
+```sh
+{alice@dev2 ~}$ cat > tmp.txt 
+7
+{alice@dev2 ~}$ cat tmp.txt
+7
+```
+
+<!-- code-block label="stdin-multiline" -->
+```sh
+{alice@dev2 ~}$ cat > tmp.txt 
+a
+b
+{alice@dev2 ~}$ cat tmp.txt
+a
+b
+```

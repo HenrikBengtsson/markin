@@ -189,7 +189,7 @@ mdi_reset() {
 
 mdi_code_block() {
     local cmd lines code_block_file suffix
-    local label
+    local label ENTER
 
     mdebug "mdi_code_block() ..."
     mdebug "- Arguments: '$*'"
@@ -251,11 +251,19 @@ mdi_code_block() {
     tf2="${tf}.tmp"
     cat > "$tf"
     for ii in "${!lines[@]}"; do 
-        cmd="${lines[$ii]}"
-        mdebug "- Line #$(( ii+1 )): '${cmd//[$'\r\n']}'"
+        line="${lines[$ii]}"
+        mdebug "- Line #$(( ii+1 )): '${line//[$'\n']/\\n}'"
+#        cmd=$(mdi_parse "$line")
+        cmd_echo="${line%%# mdi-hide*}"
+        cmd="${line//#[ ]*mdi-hide[ ]/}"
+        mdebug "- Parsed command: [n=${#cmd[@]}'"
+        mdebug "- Command echoed: '${cmd_echo//[$'\n']/\\n}'"
+        mdebug "- Command evaluated: '${cmd//[$'\n']/\\n}'"
         {
             export NO_COLOR=true
-            mdi_call "$cmd"
+            # shellcheck disable=2034
+            ENTER=$'\n'
+            mdi_call "$cmd_echo"
             eval "${cmd}" &> "$tf2"
             mdi_adjust_output < "$tf2"
         } >> "$tf" 2>&1

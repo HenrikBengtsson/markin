@@ -1,0 +1,6 @@
+{alice@dev2 ~}$ cat > tmp.txt 
+1+2
+3+4
+{alice@dev2 ~}$ cat tmp.txt
+1+2
+3+4

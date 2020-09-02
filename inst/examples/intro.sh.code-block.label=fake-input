@@ -1,0 +1,5 @@
+{alice@dev2 ~}$ read -r -p "Enter a number: " ans 
+{alice@dev2 ~}$ echo "Answer: 42"
+Answer: 42
+{alice@dev2 ~}$ #cat > tmp.txt 
+{alice@dev2 ~}$ #cat tmp.txt

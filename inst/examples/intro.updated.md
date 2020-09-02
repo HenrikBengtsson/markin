@@ -5,7 +5,7 @@ The following code block illustrates how to use `date` in the shell and what it'
 <!-- code-block #1 -->
 ```sh
 {alice@dev2 ~}$ date --rfc-3339=seconds
-2020-09-01 12:04:28-07:00
+2020-09-01 17:49:06-07:00
 ```
 
 What is special about the above code block, is that its content can be updated by running the **mdi** tool, as in:
@@ -33,3 +33,20 @@ Here is another two code blocks:
 Message: 'Hello world!'
 ```
 
+<!-- code-block label="stdin" -->
+```sh
+{alice@dev2 ~}$ cat > tmp.txt 
+42
+{alice@dev2 ~}$ cat tmp.txt
+42
+```
+
+<!-- code-block label="stdin-multiline" -->
+```sh
+{alice@dev2 ~}$ cat > tmp.txt 
+1+2
+3+4
+{alice@dev2 ~}$ cat tmp.txt
+1+2
+3+4
+```

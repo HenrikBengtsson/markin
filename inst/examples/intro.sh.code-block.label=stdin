@@ -1,0 +1,4 @@
+{alice@dev2 ~}$ cat > tmp.txt 
+42
+{alice@dev2 ~}$ cat tmp.txt
+42
