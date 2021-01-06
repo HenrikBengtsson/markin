@@ -13,8 +13,12 @@
 ###
 ### Options:
 ###
-### Version: 0.0.0-9000
-### Copyright: Henrik Bengtsson (2020)
+### Examples:
+### mdi build intro.sh
+### mdi inject intro.md
+###
+### Version: 0.0.0-9001
+### Copyright: Henrik Bengtsson (2020-2021)
 ### License: GPL (>= 3.0) [https://www.gnu.org/licenses/gpl.html]
 ### Source: https://github.com/UCSF-TI/C4-sysadm/
 #call="$0 $*"
@@ -80,6 +84,20 @@ assert_file() {
     [[ -f "$1" ]] || error "No such file: $1"
 }
 
+assert_dir() {
+    [[ -d "$1" ]] || error "No such folder: $1"
+}
+
+make_dir() {
+    [[ -d "$1" ]] && return 0
+    mkdir -p "$1" || error "Failed to create folder: $1"
+}
+
+change_dir() {
+    cd "$1" || error "Failed to change working directory: $1"
+}
+
+
 
 # -------------------------------------------------------------------------
 # CLI utility functions
@@ -108,6 +126,13 @@ drop_ansi_escapes() {
 # -------------------------------------------------------------------------
 mdi_set_home() {
     MDI_HOME=$1
+}
+
+mdi_outdir() {
+    local path
+    path="${MDI_OUTDIR:-.mdi}"
+    [[ -d "${path}" ]] || make_dir "${path}"
+    echo "${path}"
 }
 
 mdi_pwd() {
@@ -226,7 +251,7 @@ mdi_code_block() {
     else
         suffix="${MDI_CODE_BLOCK_COUNTER}"
     fi
-    code_block_file="${MDI_SCRIPT_FILE}.code-block.${suffix}"
+    code_block_file="$(mdi_outdir)/${MDI_SCRIPT_FILE}.code-block.${suffix}"
     mdebug "- code_block_file: ${code_block_file}"
 
     if $skip && [ -f "${code_block_file}" ]; then
@@ -243,6 +268,7 @@ mdi_code_block() {
     mdebug "- PS1: '${PS1}'"
     mdebug "- mdi_ps1(): '$(mdi_ps1)'"
     mdebug "- mdi_prompt(): '$(mdi_prompt)'"
+    mdebug "- mdi_outdir(): '$(mdi_outdir)'"
     mdebug "- workdir: '${workdir}'"
 
     readarray lines
@@ -250,9 +276,7 @@ mdi_code_block() {
 
     opwd=$(pwd)
 
-    if [[ -n "${workdir}" ]]; then
-        cd "${workdir}" || error "Failed to change working directory: '${workdir}'"
-    fi
+    [[ -n "${workdir}" ]] && change_dir "${workdir}"
     
     ## Write to a temporary file
     tf=$(readlink -f "${code_block_file}.tmp")
@@ -277,7 +301,7 @@ mdi_code_block() {
         mv "$tf2" "$tf"
     done
 
-    cd "${opwd}" || error "Failed to change working directory: '${opwd}'"
+    change_dir "${opwd}"
 
     ## Rename only when complete
     mv "$tf" "${code_block_file}"

@@ -38,7 +38,12 @@ mdi_inject <- function(lines, barefile, verbose = FALSE) {
   stopifnot(is.character(barefile), length(barefile) == 1L, !is.na(barefile))
   path <- dirname(barefile)
   stopifnot(file_test("-d", path))
-  
+
+  mdi_path <- Sys.getenv("MDI_OUTDIR", ".mdi")
+  stopifnot(nzchar(mdi_path))
+  mdi_path <- file.path(path, mdi_path)
+  stopifnot(file_test("-d", mdi_path))
+
   pattern <- "(.*)<!--[[:space:]]+(code-block)([[:space:]](.*))?[[:space:]]+-->(.*)"
   mdi_idxs <- grep(pattern, lines)
   nlines <- length(lines)
@@ -47,6 +52,7 @@ mdi_inject <- function(lines, barefile, verbose = FALSE) {
     message("Bare file: ", barefile)
     message("Number of lines: ", nlines)
     message("Number of MDI declarations: ", length(mdi_idxs))
+    message("MDI path: ", mdi_path)
   }
 
   chunk_idx <- 1L
@@ -129,7 +135,7 @@ mdi_inject <- function(lines, barefile, verbose = FALSE) {
       if (is.null(args$filename)) {
         chunk_file <- barefile
       } else {
-        chunk_file <- file.path(path, args$filename)
+        chunk_file <- file.path(mdi_path, args$filename)
       }
       
       if (is.null(args$label)) {
@@ -145,13 +151,13 @@ mdi_inject <- function(lines, barefile, verbose = FALSE) {
         fmtstr <- "^%s.label=%s$"
       }
       file_pattern <- sprintf(fmtstr, file_to_inject_prefix, chunk_label)
-      file_to_inject <- dir(path = path, pattern = file_pattern)
+      file_to_inject <- dir(path = mdi_path, pattern = file_pattern)
       if (length(file_to_inject) == 0L) {
-        stop(sprintf("No such %s file with label %s (path: %s, pattern: %s)", sQuote(command), sQuote(chunk_label), sQuote(path), sQuote(file_pattern)))
+        stop(sprintf("No such %s file with label %s (path: %s, pattern: %s)", sQuote(command), sQuote(chunk_label), sQuote(mdi_path), sQuote(file_pattern)))
       } else if (length(file_to_inject) > 1L) {
-        stop(sprintf("More than %s file with label %s (path: %s, pattern: %s): [n=%d] %s", sQuote(command), sQuote(chunk_label), sQuote(path), sQuote(file_pattern), length(file_to_inject), paste(sQuote(file_to_inject), collapse = ", ")))
+        stop(sprintf("More than %s file with label %s (path: %s, pattern: %s): [n=%d] %s", sQuote(command), sQuote(chunk_label), sQuote(mdi_path), sQuote(file_pattern), length(file_to_inject), paste(sQuote(file_to_inject), collapse = ", ")))
       }
-      file_to_inject <- file.path(path, file_to_inject)
+      file_to_inject <- file.path(mdi_path, file_to_inject)
       if (verbose) message("File to inject: ", sQuote(file_to_inject))
       if (!file_test("-f", file_to_inject)) {
         stop("No such file: ", sQuote(file_to_inject))
