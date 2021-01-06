@@ -213,7 +213,7 @@ mdi_reset() {
 }
 
 mdi_code_block() {
-    local cmd lines code_block_file suffix
+    local cmd lines mdi_path code_block_file suffix
     local label workdir
     local ENTER
 
@@ -251,7 +251,11 @@ mdi_code_block() {
     else
         suffix="${MDI_CODE_BLOCK_COUNTER}"
     fi
-    code_block_file="$(mdi_outdir)/${MDI_SCRIPT_FILE}.code-block.${suffix}"
+    mdi_path=$(mdi_outdir)
+    mdebug "- mdi_path: ${mdi_path}"
+    assert_dir "${mdi_path}"
+    
+    code_block_file="${mdi_path}/${MDI_SCRIPT_FILE}.code-block.${suffix}"
     mdebug "- code_block_file: ${code_block_file}"
 
     if $skip && [ -f "${code_block_file}" ]; then
@@ -268,7 +272,7 @@ mdi_code_block() {
     mdebug "- PS1: '${PS1}'"
     mdebug "- mdi_ps1(): '$(mdi_ps1)'"
     mdebug "- mdi_prompt(): '$(mdi_prompt)'"
-    mdebug "- mdi_outdir(): '$(mdi_outdir)'"
+    mdebug "- mdi_path: '${mdi_path}'"
     mdebug "- workdir: '${workdir}'"
 
     readarray lines
@@ -276,11 +280,12 @@ mdi_code_block() {
 
     opwd=$(pwd)
 
-    [[ -n "${workdir}" ]] && change_dir "${workdir}"
-    
     ## Write to a temporary file
     tf=$(readlink -f "${code_block_file}.tmp")
     tf2="${tf}.tmp"
+
+    [[ -n "${workdir}" ]] && change_dir "${workdir}"
+    
     cat > "$tf"
     for ii in "${!lines[@]}"; do 
         line="${lines[$ii]}"
