@@ -392,8 +392,7 @@ if [[ $action == "build" ]]; then
     source "$file"
 elif [[ $action == "inject" ]]; then
     assert_file "$file"
-    Rscript -e "writeLines(mdi::mdi('${file}', verbose='${debug}'))" > "$file.tmp"
-    mv "$file.tmp" "$file"
+    Rscript --vanilla -e "writeLines(mdi::mdi('${file}', verbose='${debug}'))" > "$file.tmp" && "$file.tmp" "$file"
 elif [[ $action == "call" ]]; then
     mdebug "Calling: '$extras'"
     mdi_reset
