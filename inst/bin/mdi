@@ -17,7 +17,7 @@
 ### mdi build intro.sh
 ### mdi inject intro.md
 ###
-### Version: 0.0.0-9002
+### Version: 0.1.0
 ### Copyright: Henrik Bengtsson (2020-2022)
 ### License: GPL (>= 3.0) [https://www.gnu.org/licenses/gpl.html]
 ### Source: https://github.com/UCSF-TI/C4-sysadm/
