@@ -144,7 +144,7 @@ mdi_inject <- function(lines, barefile, verbose = FALSE) {
         chunk_label <- args$label
       }
 
-      file_to_inject_prefix <- sprintf("%s.%s.%s", basename(chunk_file), language, command)
+      file_to_inject_prefix <- sprintf("%s.%s", basename(chunk_file), command)
       if (grepl("^[0-9]+$", chunk_label)) {
         fmtstr <- "^%s.%s$"
       } else {
