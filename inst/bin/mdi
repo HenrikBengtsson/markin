@@ -255,7 +255,7 @@ mdi_code_block() {
     mdebug "- mdi_path: ${mdi_path}"
     assert_dir "${mdi_path}"
     
-    code_block_file="${mdi_path}/${MDI_SCRIPT_FILE}.code-block.${suffix}"
+    code_block_file="${mdi_path}/${MDI_SCRIPT_PREFIX}.code-block.${suffix}"
     mdebug "- code_block_file: ${code_block_file}"
 
     if $skip && [ -f "${code_block_file}" ]; then
@@ -385,7 +385,8 @@ fi
 
 if [[ $action == "build" ]]; then
     assert_file "$file"
-    MDI_SCRIPT_FILE=${MDI_SCRIPT_FILE:-${file}}
+    name=$(echo "${file}" | sed -E 's/[.][^.]+$//')
+    MDI_SCRIPT_PREFIX=${MDI_SCRIPT_PREFIX:-${name}}
     mdi_reset
 
     # shellcheck disable=SC1090

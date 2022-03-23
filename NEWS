@@ -7,9 +7,9 @@ SIGNIFICANT CHANGES:
 
  * Now 'mdi build' and 'mdi inject' uses .mdi/ for code blocks.
 
-NEW FEATURES:
-
- * Now it's possible to override 'MDI_SCRIPT_FILE'.
+ * Now the code-block prefix no longer includes the file extension of
+   the source file.  For example, 'mdi build r.sh' will now use prefix 'r'
+   whereas in the past it was 'r.sh'.
  
 
 Version: 0.0.0-9000 [2020-08-27]
