@@ -1,0 +1,401 @@
+#! /usr/bin/env bash
+### markin - The Markdown Injector
+###
+### Usage:
+###  markin <command> [flags] [options] <file>
+###
+### Commands:
+###  build      Generate code blocks
+###  inject     Injects already compiled code blocks
+###
+### Flags:
+###  --skip     Skip evaluation of code block, if code-block file exists
+###
+### Options:
+###
+### Examples:
+### markin build intro.sh
+### markin inject intro.md
+###
+### Version: 0.1.0-9000
+### Copyright: Henrik Bengtsson (2020-2022)
+### License: GPL (>= 3.0) [https://www.gnu.org/licenses/gpl.html]
+### Source: https://github.com/UCSF-TI/C4-sysadm/
+#call="$0 $*"
+
+# -------------------------------------------------------------------------
+# Output utility functions
+# -------------------------------------------------------------------------
+_tput() {
+    if [[ $theme == "none" ]]; then
+        return
+    fi
+    tput "$@" 2> /dev/null
+}
+
+mdebug() {
+    if ! $debug; then
+        return
+    fi
+    {
+        _tput setaf 8 ## gray
+        echo "DEBUG: $*"
+        _tput sgr0    ## reset
+    } 1>&2
+}
+
+error() {
+    {
+        _tput setaf 1 ## red
+        echo "ERROR: $*"
+        _tput sgr0    ## reset
+    } >&2
+    exit 1
+}
+
+warn() {
+    {
+        _tput setaf 3 ## yellow
+        echo "WARNING: $*"
+        _tput sgr0    ## reset
+    } >&2
+    exit 1
+}
+
+ok() {
+    {
+        _tput setaf 2 ## green
+        echo "OK: $*"
+        _tput sgr0    ## reset
+    } >&2
+    exit 1
+}
+
+_exit() {
+    local value
+
+    value=${1:-0}
+    [[ "$(LC_ALL=C type -t _cleanup)" = function ]] && _cleanup
+    mdebug "Exiting with exit code $value"
+    exit "$value"
+}
+
+assert_file() {
+    [[ -f "$1" ]] || error "No such file: $1"
+}
+
+assert_dir() {
+    [[ -d "$1" ]] || error "No such folder: $1"
+}
+
+make_dir() {
+    [[ -d "$1" ]] && return 0
+    mkdir -p "$1" || error "Failed to create folder: $1"
+}
+
+change_dir() {
+    cd "$1" || error "Failed to change working directory: $1"
+}
+
+
+
+# -------------------------------------------------------------------------
+# CLI utility functions
+# -------------------------------------------------------------------------
+version() {
+    grep -E "^###[ ]*Version:[ ]*" "$0" | sed 's/###[ ]*Version:[ ]*//g'
+}
+
+help() {
+    local res
+    res=$(grep "^###" "$0" | grep -vE '^(####|### whatis: )' | cut -b 5-)
+    printf "%s\\n" "${res[@]}"
+}
+
+
+# -------------------------------------------------------------------------
+# Terminal functions
+# -------------------------------------------------------------------------
+drop_ansi_escapes() {
+    sed 's/\x1b\[[0-9;]*m//g'
+}
+
+
+# -------------------------------------------------------------------------
+# MDI functions
+# -------------------------------------------------------------------------
+mdi_set_home() {
+    MDI_HOME=$1
+}
+
+mdi_outdir() {
+    local path
+    path="${MDI_OUTDIR:-.mdi}"
+    [[ -d "${path}" ]] || make_dir "${path}"
+    echo "${path}"
+}
+
+mdi_pwd() {
+    local tilde
+    tilde='~'
+    echo "${PWD//${MDI_HOME}/${tilde}}"
+}
+
+mdi_user() {
+    echo "${MDI_USER}"
+}
+
+mdi_hostname() {
+    echo "${MDI_HOSTNAME}"
+}
+
+mdi_ps1() {
+    local prompt t
+    if [[ -z "$PS1" ]]; then
+        warn "PS1 is empty"
+    fi
+    prompt="${PS1}"
+    
+    ## \u : the username of the current user
+    prompt=${prompt//\\u/$(mdi_user)}
+    
+    ## \H : the hostname
+    t=$(mdi_hostname)
+    prompt=${prompt//\\h/$t}
+    ## \h : the hostname up to the first ‘.’
+    prompt=${prompt//\\h/${t%%.*}}
+             
+    ## \w : the current working directory, with $HOME abbreviated with a tilde
+    t=$(mdi_pwd)
+    prompt=${prompt//\\w/$t}
+    ## \W : the basename of the current working directory, with $HOME
+    ##      abbreviated with a tilde
+    prompt=${prompt//\\W/$(basename "$t")}
+    
+    echo "$prompt"
+}
+
+mdi_prompt() {
+    echo "{$(mdi_user)@$(mdi_hostname) $(mdi_pwd)}\$ "
+}
+
+mdi_prompt() {
+    local tf
+    tf=$(mktemp)
+    PS4="$(mdi_ps1)" bash --norc --noprofile -c "set -x; true" 2> "$tf"
+    sed -E 's/true$//' "$tf"
+}
+
+mdi_cmd() {
+    local cmd
+    cmd=$*
+    echo "${cmd}"
+}
+
+mdi_call() {
+    printf "%s%s\\n" "$(mdi_prompt)" "$(mdi_cmd "$*")"
+}    
+
+mdi_replace_pwd() {
+    sed "s/${MDI_HOME//\//\\/}/~/g" -
+}
+
+mdi_adjust_output() {
+    mdi_replace_pwd
+}
+
+mdi_reset() {
+    PS1=${PS1:-$MDI_PS1}
+    MDI_HOME=${MDI_HOME:-$PWD}
+    MDI_USER=${MDI_USER:-$USER}
+    MDI_HOSTNAME=${MDI_HOSTNAME:-$HOSTNAME}
+    MDI_CODE_BLOCK_COUNTER=0
+}
+
+mdi_code_block() {
+    local cmd lines mdi_path code_block_file suffix
+    local label workdir
+    local ENTER
+
+    mdebug "mdi_code_block() ..."
+    mdebug "- Arguments: '$*'"
+    
+    while [[ $# -gt 0 ]]; do
+        ## Options (--key=value):
+        if [[ "$1" =~ ^--.*=.*$ ]]; then
+            key=${1//--}
+            key=${key//=*}
+            value=${1//--[[:alnum:]_-]*=}
+            mdebug "Key-value option '$1' parsed to key='$key', value='$value'"
+            if [[ -z $value ]]; then
+                merror "Option '--$key' must not be empty"
+            fi
+            if [[ "$key" == "label" ]]; then
+                label="$value"
+            elif [[ "$key" == "workdir" ]]; then
+                workdir="$value"
+            else
+                error "Unknown mdi_code_block() options: $1"
+            fi
+        else
+            error "Unknown mdi_code_block() options: $1"
+        fi
+        shift
+    done
+    
+    MDI_CODE_BLOCK_COUNTER=$((MDI_CODE_BLOCK_COUNTER+1))
+    mdebug "- MDI_CODE_BLOCK_COUNTER: ${MDI_CODE_BLOCK_COUNTER}"
+    
+    if [[ -n "${label}" ]]; then
+        suffix="label=${label}"
+    else
+        suffix="${MDI_CODE_BLOCK_COUNTER}"
+    fi
+    mdi_path=$(mdi_outdir)
+    mdebug "- mdi_path: ${mdi_path}"
+    assert_dir "${mdi_path}"
+    
+    code_block_file="${mdi_path}/${MDI_SCRIPT_PREFIX}.code-block.${suffix}"
+    mdebug "- code_block_file: ${code_block_file}"
+
+    if $skip && [ -f "${code_block_file}" ]; then
+        echo "Already exist: $code_block_file"
+        return
+    fi
+
+    mdebug "- MDI_HOME: '${MDI_HOME}'"
+    mdebug "- MDI_USER: '${MDI_USER}'"
+    mdebug "- mdi_user(): '$(mdi_user)'"
+    mdebug "- MDI_HOSTNAME: '${MDI_HOSTNAME}'"
+    mdebug "- mdi_hostname(): '$(mdi_hostname)'"
+    mdebug "- mdi_pwd(): '$(mdi_pwd)'"
+    mdebug "- PS1: '${PS1}'"
+    mdebug "- mdi_ps1(): '$(mdi_ps1)'"
+    mdebug "- mdi_prompt(): '$(mdi_prompt)'"
+    mdebug "- mdi_path: '${mdi_path}'"
+    mdebug "- workdir: '${workdir}'"
+
+    readarray lines
+    mdebug "- Number of lines: ${#lines[@]}"
+
+    opwd=$(pwd)
+
+    ## Write to a temporary file
+    tf=$(readlink -f "${code_block_file}.tmp")
+    tf2="${tf}.tmp"
+
+    [[ -n "${workdir}" ]] && change_dir "${workdir}"
+    
+    cat > "$tf"
+    for ii in "${!lines[@]}"; do 
+        line="${lines[$ii]}"
+        mdebug "- Line #$(( ii+1 )): '${line//[$'\n']/\\n}'"
+        cmd_echo="${line%%# mdi-hide*}"
+        cmd="${line//#[ ]*mdi-hide[ ]/}"
+        mdebug "- Command echoed: '${cmd_echo//[$'\n']/\\n}'"
+        mdebug "- Command evaluated: '${cmd//[$'\n']/\\n}'"
+        {
+            export NO_COLOR=true
+            # shellcheck disable=2034
+            ENTER=$'\n'
+            mdi_call "$cmd_echo"
+            eval "${cmd}" &> "$tf2"
+            mdi_adjust_output < "$tf2"
+        } >> "$tf" 2>&1
+        drop_ansi_escapes < "$tf" > "$tf2"
+        mv "$tf2" "$tf"
+    done
+
+    change_dir "${opwd}"
+
+    ## Rename only when complete
+    mv "$tf" "${code_block_file}"
+    
+    if $debug; then
+        readarray lines < "$code_block_file"
+        mdebug "- Number of output lines: ${#lines[@]}"
+        for ii in "${!lines[@]}"; do 
+            line="${lines[$ii]}"
+            mdebug "  '${line//[$'\r\n']}'"
+        done
+    fi
+    
+    mdebug "mdi_code_block() ... done"
+    
+    echo "Created: $code_block_file"
+}
+
+
+# -------------------------------------------------------------------------
+# Main
+# -------------------------------------------------------------------------
+theme=
+action=
+debug=false
+file=
+skip=false
+
+# Parse command-line options
+while [[ $# -gt 0 ]]; do
+    ## Commands:
+    if [[ "$1" == "build" ]]; then
+        action="$1"
+    elif [[ "$1" == "inject" ]]; then
+        action="$1"
+    elif [[ "$1" == "call" ]]; then
+        action="$1"
+        
+    ## Options (--flags):
+    elif [[ "$1" == "--help" ]]; then
+        action=help
+    elif [[ "$1" == "--version" ]]; then
+        action=version
+    elif [[ "$1" == "--debug" ]]; then
+        debug=true
+    elif [[ "$1" == "--skip" ]]; then
+        skip=true
+
+    ## Options (--key=value):
+    elif [[ "$1" =~ ^--.*=.*$ ]]; then
+        key=${1//--}
+        key=${key//=*}
+        value=${1//--[[:alnum:]_-]*=}
+        mdebug "Key-value option '$1' parsed to key='$key', value='$value'"
+        if [[ -z $value ]]; then
+            merror "Option '--$key' must not be empty"
+        fi
+    else
+        if [[ -z "$file" && "$action" != "call" ]]; then
+            file="$1"
+        else
+            extras="$extras $1"
+        fi
+    fi
+    shift
+done
+
+## --help should always be available prior to any validation errors
+if [[ -z $action ]]; then
+    help
+    _exit 0
+elif [[ $action == "help" ]]; then
+    help
+    _exit 0
+fi
+
+if [[ $action == "build" ]]; then
+    assert_file "$file"
+    name=$(echo "${file}" | sed -E 's/[.][^.]+$//')
+    MDI_SCRIPT_PREFIX=${MDI_SCRIPT_PREFIX:-${name}}
+    mdi_reset
+
+    # shellcheck disable=SC1090
+    source "$file"
+elif [[ $action == "inject" ]]; then
+    assert_file "$file"
+    Rscript --vanilla -e "writeLines(markin::markin('${file}', verbose='${debug}'))" > "$file.tmp" && mv "$file.tmp" "$file"
+elif [[ $action == "call" ]]; then
+    mdebug "Calling: '$extras'"
+    mdi_reset
+    eval "$extras"
+fi
