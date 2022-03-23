@@ -17,8 +17,8 @@
 ### mdi build intro.sh
 ### mdi inject intro.md
 ###
-### Version: 0.0.0-9001
-### Copyright: Henrik Bengtsson (2020-2021)
+### Version: 0.0.0-9002
+### Copyright: Henrik Bengtsson (2020-2022)
 ### License: GPL (>= 3.0) [https://www.gnu.org/licenses/gpl.html]
 ### Source: https://github.com/UCSF-TI/C4-sysadm/
 #call="$0 $*"
@@ -385,7 +385,7 @@ fi
 
 if [[ $action == "build" ]]; then
     assert_file "$file"
-    MDI_SCRIPT_FILE=$file
+    MDI_SCRIPT_FILE=${MDI_SCRIPT_FILE:-${file}}
     mdi_reset
 
     # shellcheck disable=SC1090
