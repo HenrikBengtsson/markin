@@ -1,4 +1,4 @@
-#' The Markdown Injector (MDI)
+#' The Markdown Injector
 #'
 #' @param file The Markdown file
 #'
@@ -10,7 +10,7 @@
 #' @importFrom tools file_path_sans_ext
 #' @importFrom utils file_test
 #' @export
-mdi <- function(file, verbose = FALSE) {
+markin <- function(file, verbose = FALSE) {
   stopifnot(file_test("-f", file))
   barefile <- file_path_sans_ext(file)
 
@@ -20,7 +20,7 @@ mdi <- function(file, verbose = FALSE) {
   }
 
   lines <- readLines(file, warn = FALSE)
-  mdi_inject(lines, barefile = barefile, verbose = verbose)
+  markin_inject(lines, barefile = barefile, verbose = verbose)
 }
 
 
@@ -30,10 +30,10 @@ mdi <- function(file, verbose = FALSE) {
 #'
 #' @return (character) The updated Markdown lines.
 #'
-#' @rdname mdi
+#' @rdname markin
 #' @importFrom utils file_test
 #' @export
-mdi_inject <- function(lines, barefile, verbose = FALSE) {
+markin_inject <- function(lines, barefile, verbose = FALSE) {
   stopifnot(is.character(lines), !anyNA(lines))
   stopifnot(is.character(barefile), length(barefile) == 1L, !is.na(barefile))
   path <- dirname(barefile)

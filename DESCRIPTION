@@ -1,9 +1,9 @@
-Package: mdi
-Version: 0.1.0
+Package: markin
+Version: 0.2.0
 Suggests:
     tools,
     utils
-Title: The Markdown Injector (MDI)
+Title: The Markdown Injector
 Authors@R: c(person("Henrik", "Bengtsson", role=c("aut", "cre", "cph"),
                                           email = "henrikb@braju.com"))
 Description: Tools for updated Markdown code blocks.

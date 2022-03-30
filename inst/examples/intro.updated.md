@@ -1,4 +1,4 @@
-# The Markdown Injector (MDI) - An Introduction
+# The Markdown Injector - An Introduction
 
 The following code block illustrates how to use `date` in the shell and what it's output is.
 
@@ -8,10 +8,10 @@ The following code block illustrates how to use `date` in the shell and what it'
 2020-09-01 17:49:06-07:00
 ```
 
-What is special about the above code block, is that its content can be updated by running the **mdi** tool, as in:
+What is special about the above code block, is that its content can be updated by running the **markin** tool, as in:
 
 ```sh
-$ mdi inject intro.md
+$ markin inject intro.md
 ```
 
 Here is another two code blocks:

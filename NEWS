@@ -1,7 +1,18 @@
-Package: mdi
-============
+Package: markin
+===============
 
-Version: 0.0.0-9002 [2022-03-23]
+Version: 0.2.0 [2022-03-29]
+
+SIGNIFICANT CHANGES:
+
+ * Renamed tool and R package to 'markin' (was 'mdi').  For backward
+   compatibility, command 'mdi' will still work as an alias for now.
+
+ * Functions mdi() and mdi_inject() were renamed to markin() and
+   markin_inject().
+
+
+Version: 0.1.0 [2022-03-23]
 
 SIGNIFICANT CHANGES:
 

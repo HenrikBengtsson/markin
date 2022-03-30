@@ -1,5 +1,5 @@
 #! /usr/bin/env bash
-#' @usage: mdi build intro.sh
+#' @usage: markin build intro.sh
 
 # shellcheck disable=SC2016,SC2034
 MDI_USER=alice
